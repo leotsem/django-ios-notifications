@@ -40,7 +40,7 @@ class DeviceResource(BaseResource):
 
 	Allowed HTTP methods are GET, POST and PUT.
 	"""
-	allowed_methods = ('GET', 'POST', 'PUT')
+	allowed_methods = ('GET', 'POST', 'PUT', 'DELETE')
 
 	def get(self, request, **kwargs):
 		"""
@@ -121,9 +121,26 @@ class DeviceResource(BaseResource):
 
 		for key, value in request.PUT.items():
 			setattr(device, key, value)
+
 		device.save()
 
 		return JSONResponse(device)
+
+	def delete(self, request, **kwargs):
+		"""
+		Deletes an existing device
+		"""
+		try:
+
+			device = Device.objects.get(**kwargs)
+			device.is_active = False
+			device.save()
+
+			return JSONResponse(device)
+
+		except Device.DoesNotExist:
+			return JSONResponse({'error': 'Device with token %s and service %s does not exist' %
+								(kwargs['token'], kwargs['service__id'])}, status=400)
 
 
 class Router(object):
