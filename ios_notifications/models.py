@@ -154,7 +154,7 @@ class APNService(BaseService):
         if notification.sound is not None:
             aps['sound'] = notification.sound
 
-        message = {'aps': aps}
+        message = {'aps': aps, 'ref_id': notification.ref_id}
         payload = json.dumps(message, separators=(',', ':'))
 
         if len(payload) > 256:
@@ -191,6 +191,7 @@ class Notification(models.Model):
     sound = models.CharField(max_length=30, null=True, default='default')
     created_at = models.DateTimeField(auto_now_add=True)
     last_sent_at = models.DateTimeField(null=True, blank=True)
+    ref_id = models.IntegerField(null=True, blank=True)
 
     def push_to_all_devices(self):
         """
@@ -203,7 +204,7 @@ class Notification(models.Model):
         return u'Notification: %s' % self.message
 
     @staticmethod
-    def is_valid_length(message, badge=None, sound=None):
+    def is_valid_length(message, badge=None, sound=None, ref_id=None):
         """
         Determines if a notification payload is a valid length.
 
@@ -215,6 +216,8 @@ class Notification(models.Model):
         if sound is not None:
             aps['sound'] = sound
         message = {'aps': aps}
+        if ref_id is not None:
+            message.update({'ref_id': ref_id})
         payload = json.dumps(message, separators=(',', ':'))
         return len(payload) <= 256
 
