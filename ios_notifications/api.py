@@ -11,6 +11,7 @@ from ios_notifications.models import Device
 from ios_notifications.forms import DeviceForm
 from ios_notifications.decorators import api_authentication_required
 from ios_notifications.http import HttpResponseNotImplemented, JSONResponse
+import simplejson as json
 
 
 class BaseResource(object):
@@ -58,8 +59,10 @@ class DeviceResource(BaseResource):
 		Creates a new device or updates an existing one to `is_active=True`.
 		Expects two non-options POST parameters: `token` and `service`.
 		"""
-		devices = Device.objects.filter(token=request.POST.get('token'),
-										service__id=int(request.POST.get('service', 0)))
+
+		params = json.loads(request.raw_post_data)
+		devices = Device.objects.filter(token=params['token'],
+										service__id=int(params['service']))
 		if devices.exists():
 			device = devices.get()
 			device.is_active = True
