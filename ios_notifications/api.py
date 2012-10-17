@@ -59,19 +59,21 @@ class DeviceResource(BaseResource):
 		Creates a new device or updates an existing one to `is_active=True`.
 		Expects two non-options POST parameters: `token` and `service`.
 		"""
-
 		params = json.loads(request.raw_post_data)
 		devices = Device.objects.filter(token=params['token'],
 										service__id=int(params['service']))
 		if devices.exists():
+
 			device = devices.get()
 			device.is_active = True
 
-			if 'uid' in request.POST:
+			if 'uid' in request.GET:
+
 				try:
-					u = User.objects.get(id=request.POST.get('uid'))
-					device.users.remove(*[u.id for u in device.users.all()])
+					u = User.objects.get(id=request.GET.get('uid'))
+					device.users.clear()
 					device.users.add(u)
+
 				except Exception:
 					pass
 
@@ -84,10 +86,10 @@ class DeviceResource(BaseResource):
 
 			device.save()
 
-			if 'uid' in request.POST:
+			if 'uid' in request.GET:
 				try:
-					u = User.objects.get(id=request.POST.get('uid'))
-					device.users.remove(*[u.id for u in device.users.all()])
+					u = User.objects.get(id=request.GET.get('uid'))
+					device.users.clear()
 					device.users.add(u)
 				except Exception:
 					pass
