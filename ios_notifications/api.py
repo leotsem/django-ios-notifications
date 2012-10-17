@@ -62,74 +62,42 @@ class DeviceResource(BaseResource):
 		params = json.loads(request.raw_post_data)
 		devices = Device.objects.filter(token=params['token'],
 										service__id=int(params['service']))
-		if devices.exists():
+		if params['token'] and params['service']:
 
-			device = devices.get()
-			device.is_active = True
+			if devices.exists():
 
-			if 'uid' in request.GET:
+				device = devices.get()
+				device.is_active = True
 
-				try:
-					u = User.objects.get(id=request.GET.get('uid'))
-					device.users.clear()
-					device.users.add(u)
+				if 'uid' in request.GET:
 
-				except Exception:
-					pass
+					try:
+						u = User.objects.get(id=request.GET.get('uid'))
+						device.users.clear()
+						device.users.add(u)
 
-			device.save()
-			return JSONResponse(device)
-		form = DeviceForm(request.POST)
-		if form.is_valid():
-			device = form.save(commit=False)
-			device.is_active = True
+					except Exception:
+						pass
 
-			device.save()
+				device.save()
+				return JSONResponse(device)
 
-			if 'uid' in request.GET:
-				try:
-					u = User.objects.get(id=request.GET.get('uid'))
-					device.users.clear()
-					device.users.add(u)
-				except Exception:
-					pass
+			else:
 
-			return JSONResponse(device, status=201)
-		return JSONResponse(form.errors, status=400)
+				device = Device()
+				device.is_active = True
+				device.token = params['token']
+				device.service_id = int(params['service'])
+				device.save()
 
-	def put(self, request, **kwargs):
-		"""
-		Updates an existing device.
+				if 'uid' in request.GET:
+					try:
+						u = User.objects.get(id=request.GET.get('uid'))
+						device.users.add(u)
+					except Exception:
+						pass
 
-		If the device does not exist a 404 will be raised.
-
-		The device token and device service are expected as the keyword arguments
-		supplied by the URL.
-
-		Any attributes to be updated should be supplied as parameters in the request
-		body of any HTTP PUT request.
-		"""
-		try:
-			device = Device.objects.get(**kwargs)
-		except Device.DoesNotExist:
-			return JSONResponse({'error': 'Device with token %s and service %s does not exist' %
-								(kwargs['token'], kwargs['service__id'])}, status=400)
-
-		if 'users' in request.PUT:
-			try:
-				user_ids = request.PUT.getlist('users')
-				device.users.remove(*[u.id for u in device.users.all()])
-				device.users.add(*User.objects.filter(id__in=user_ids))
-			except (ValueError, IntegrityError) as e:
-				return JSONResponse({'error': e.message}, status=400)
-			del request.PUT['users']
-
-		for key, value in request.PUT.items():
-			setattr(device, key, value)
-
-		device.save()
-
-		return JSONResponse(device)
+				return JSONResponse(device)
 
 	def delete(self, request, **kwargs):
 		"""
