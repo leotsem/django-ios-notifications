@@ -2,6 +2,7 @@ from django.db.models.query import QuerySet
 from django.http import HttpResponse
 from django.core import serializers
 from django.utils import simplejson as json
+from netrobe.settings import API_HTTP_HEADER_KEY
 
 
 class HttpResponseNotImplemented(HttpResponse):
@@ -16,6 +17,7 @@ class JSONResponse(HttpResponse):
     def __init__(self, content=None, content_type=None, status=None, mimetype='application/json'):
         content = self.serialize(content) if content is not None else ''
         super(JSONResponse, self).__init__(content, content_type, status, mimetype)
+        self['Netrobe-Server-Identifier'] = API_HTTP_HEADER_KEY
 
     def serialize(self, obj):
         json_s = serializers.get_serializer('json')()
