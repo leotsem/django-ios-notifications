@@ -6,7 +6,7 @@ import datetime
 
 from django.db import models
 from django.contrib.auth.models import User
-from django.utils import simplejson as json
+import json
 from django_fields.fields import EncryptedCharField
 from django.conf import settings
 
